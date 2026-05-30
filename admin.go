@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ns/go-admin/internal/core"
+	"github.com/Newton-School/go-admin/internal/core"
 )
 
 type SiteConfig = core.SiteConfig

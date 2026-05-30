@@ -7,7 +7,7 @@ Auth and permissions are intentionally not built in. Protect the mounted handler
 ## Install
 
 ```bash
-go get github.com/ns/go-admin
+go get github.com/Newton-School/go-admin
 ```
 
 Requires Go `1.26` or newer.
@@ -40,7 +40,7 @@ import (
     "log"
     "net/http"
 
-    admin "github.com/ns/go-admin"
+    admin "github.com/Newton-School/go-admin"
 )
 
 type Product struct {

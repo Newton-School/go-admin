@@ -3,7 +3,7 @@ package admin_test
 import (
 	"context"
 	"errors"
-	. "github.com/ns/go-admin"
+	. "github.com/Newton-School/go-admin"
 	"testing"
 )
 

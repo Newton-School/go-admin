@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	admin "github.com/ns/go-admin"
+	admin "github.com/Newton-School/go-admin"
 )
 
 type Product struct {

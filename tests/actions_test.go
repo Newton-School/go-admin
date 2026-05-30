@@ -2,7 +2,7 @@ package admin_test
 
 import (
 	"context"
-	. "github.com/ns/go-admin"
+	. "github.com/Newton-School/go-admin"
 	"net/http"
 	"net/url"
 	"strings"

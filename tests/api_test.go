@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	. "github.com/ns/go-admin"
+	. "github.com/Newton-School/go-admin"
 	"net/http"
 	"net/http/httptest"
 	"testing"

@@ -1,7 +1,7 @@
 package admin_test
 
 import (
-	. "github.com/ns/go-admin"
+	. "github.com/Newton-School/go-admin"
 	"html/template"
 	"net/url"
 	"strings"

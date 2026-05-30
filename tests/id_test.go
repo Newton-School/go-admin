@@ -3,7 +3,7 @@ package admin_test
 import (
 	"testing"
 
-	. "github.com/ns/go-admin"
+	. "github.com/Newton-School/go-admin"
 )
 
 func TestInt64IDCodecParsesAndFormats(t *testing.T) {

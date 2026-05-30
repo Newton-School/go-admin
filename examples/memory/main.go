@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	admin "github.com/ns/go-admin"
+	admin "github.com/Newton-School/go-admin"
 )
 
 type Product struct {
