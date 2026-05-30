@@ -1,0 +1,31 @@
+version = 1
+name = "local"
+
+[setup]
+script = '''
+true
+'''
+
+[[actions]]
+name = "Run example server"
+icon = "run"
+command = "go run ./examples/memory"
+
+[[actions]]
+name = "Run docs"
+icon = "run"
+command = '''
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+  . "$HOME/.nvm/nvm.sh"
+else
+  echo "nvm not found; docs action expects Node $(cat docs/.nvmrc)."
+  exit 1
+fi
+
+cd docs
+nvm use
+if [ ! -d node_modules ]; then
+  npm install
+fi
+npm run dev
+'''
