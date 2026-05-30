@@ -1,17 +1,19 @@
 package admin
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
-	"sort"
 	"strings"
 	"sync"
 )
 
 // SiteConfig controls a mounted admin site.
 type SiteConfig struct {
-	Title    string
-	BasePath string
+	Title       string
+	BasePath    string
+	DisableCSRF bool
 }
 
 // Site owns the admin registry and exposes the http.Handler.
@@ -110,10 +112,55 @@ func (s *Site) Handler() http.Handler {
 	return s
 }
 
-// ServeHTTP currently exposes a minimal placeholder until UI routes are added.
-func (s *Site) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	_, _ = w.Write([]byte(s.config.Title))
+// ServeHTTP routes admin UI requests.
+func (s *Site) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == s.config.BasePath {
+		http.Redirect(w, r, s.config.BasePath+"/", http.StatusMovedPermanently)
+		return
+	}
+	prefix := s.config.BasePath + "/"
+	if !strings.HasPrefix(r.URL.Path, prefix) {
+		http.NotFound(w, r)
+		return
+	}
+
+	relative := strings.Trim(strings.TrimPrefix(r.URL.Path, prefix), "/")
+	if relative == "" {
+		s.handleIndex(w, r)
+		return
+	}
+
+	parts := strings.Split(relative, "/")
+	if parts[0] == "static" {
+		s.handleStatic(w, r)
+		return
+	}
+	if parts[0] == "api" {
+		http.NotFound(w, r)
+		return
+	}
+	if len(parts) == 1 {
+		s.handleApp(w, r, parts[0])
+		return
+	}
+
+	app, resource, ok := s.lookup(parts[0], parts[1])
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+	switch {
+	case len(parts) == 2:
+		s.handleList(w, r, app, resource)
+	case len(parts) == 3 && parts[2] == "new":
+		s.handleCreate(w, r, app, resource)
+	case len(parts) == 3:
+		s.handleDetail(w, r, app, resource, parts[2])
+	case len(parts) == 4 && parts[3] == "delete":
+		s.handleDelete(w, r, app, resource, parts[2])
+	default:
+		http.NotFound(w, r)
+	}
 }
 
 // Register adds a resource to an app.
@@ -160,8 +207,341 @@ func normalizeBasePath(path string) string {
 	return path
 }
 
-func sortResourceMeta(resources []ResourceMeta) {
-	sort.SliceStable(resources, func(i, j int) bool {
-		return resources[i].Name < resources[j].Name
+func (s *Site) handleStatic(w http.ResponseWriter, r *http.Request) {
+	staticFS, err := fs.Sub(embeddedFiles, "internal/static")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.StripPrefix(s.config.BasePath+"/static/", http.FileServer(http.FS(staticFS))).ServeHTTP(w, r)
+}
+
+func (s *Site) handleIndex(w http.ResponseWriter, r *http.Request) {
+	data := s.basePage(r, s.config.Title)
+	s.render(w, r, "index", data)
+}
+
+func (s *Site) handleApp(w http.ResponseWriter, r *http.Request, appName string) {
+	apps := s.Apps()
+	for _, app := range apps {
+		if app.Name == appName {
+			data := s.basePage(r, app.Label)
+			data.Apps = []AppMeta{app}
+			s.render(w, r, "index", data)
+			return
+		}
+	}
+	http.NotFound(w, r)
+}
+
+func (s *Site) handleList(w http.ResponseWriter, r *http.Request, app *App, resource resourceRuntime) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	listConfig := resource.listConfig()
+	query := QueryFromRequest(r, QueryConfig{
+		DefaultPerPage: defaultPerPage,
+		MaxPerPage:     defaultMaxPage,
+		AllowedSorts:   allowedSorts(listConfig),
+		FilterNames:    filterNames(listConfig.Filters),
 	})
+	page, err := resource.list(r.Context(), query)
+	if err != nil {
+		s.writeError(w, err)
+		return
+	}
+
+	meta := resource.meta()
+	columns := fieldsByNames(resource.fields(), listConfig.Columns)
+	rows := make([]listRow, 0, len(page.Items))
+	for _, item := range page.Items {
+		id := resource.idString(item)
+		row := listRow{ID: id, Detail: s.resourceURL(app.name, meta.Name, id)}
+		for _, column := range columns {
+			row.Cells = append(row.Cells, cellView{Field: column, Value: resource.fieldValue(item, column.name())})
+		}
+		rows = append(rows, row)
+	}
+
+	base := s.basePage(r, meta.Label)
+	data := listPageData{
+		pageData: base,
+		App:      AppMeta{Name: app.name, Label: app.label},
+		Resource: ResourceMeta{
+			Name:  meta.Name,
+			Label: meta.Label,
+		},
+		Columns: columns,
+		Rows:    rows,
+		Search:  query.Search,
+		Filters: filterViews(listConfig.Filters, query.Filters),
+		Page: pageView{
+			Total:   page.Total,
+			Page:    page.Page,
+			PerPage: page.PerPage,
+		},
+		NewURL: s.resourceURL(app.name, meta.Name, "new"),
+	}
+	s.render(w, r, "list", data)
+}
+
+func (s *Site) handleCreate(w http.ResponseWriter, r *http.Request, app *App, resource resourceRuntime) {
+	switch r.Method {
+	case http.MethodGet:
+		s.renderResourceForm(w, r, app, resource, nil, nil, true)
+	case http.MethodPost:
+		if !s.verifyCSRF(r) {
+			http.Error(w, "csrf token invalid", http.StatusForbidden)
+			return
+		}
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "invalid form", http.StatusBadRequest)
+			return
+		}
+		obj, errs, err := resource.create(r.Context(), r.PostForm)
+		if err != nil {
+			s.writeError(w, err)
+			return
+		}
+		if !errs.Empty() {
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			s.renderResourceForm(w, r, app, resource, obj, errs, true)
+			return
+		}
+		http.Redirect(w, r, s.resourceURL(app.name, resource.meta().Name, resource.idString(obj)), http.StatusSeeOther)
+	default:
+		w.Header().Set("Allow", strings.Join([]string{http.MethodGet, http.MethodPost}, ", "))
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (s *Site) handleDetail(w http.ResponseWriter, r *http.Request, app *App, resource resourceRuntime, rawID string) {
+	switch r.Method {
+	case http.MethodGet:
+		obj, err := resource.get(r.Context(), rawID)
+		if err != nil {
+			s.writeError(w, err)
+			return
+		}
+		s.renderResourceForm(w, r, app, resource, obj, nil, false)
+	case http.MethodPost:
+		if !s.verifyCSRF(r) {
+			http.Error(w, "csrf token invalid", http.StatusForbidden)
+			return
+		}
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "invalid form", http.StatusBadRequest)
+			return
+		}
+		obj, errs, err := resource.update(r.Context(), rawID, r.PostForm)
+		if err != nil {
+			s.writeError(w, err)
+			return
+		}
+		if !errs.Empty() {
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			s.renderResourceForm(w, r, app, resource, obj, errs, false)
+			return
+		}
+		http.Redirect(w, r, s.resourceURL(app.name, resource.meta().Name, rawID), http.StatusSeeOther)
+	default:
+		w.Header().Set("Allow", strings.Join([]string{http.MethodGet, http.MethodPost}, ", "))
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (s *Site) handleDelete(w http.ResponseWriter, r *http.Request, app *App, resource resourceRuntime, rawID string) {
+	switch r.Method {
+	case http.MethodGet:
+		if _, err := resource.get(r.Context(), rawID); err != nil {
+			s.writeError(w, err)
+			return
+		}
+		meta := resource.meta()
+		base := s.basePage(r, "Delete "+meta.Label)
+		base.CSRFToken = s.ensureCSRF(w, r)
+		data := deletePageData{
+			pageData:  base,
+			App:       AppMeta{Name: app.name, Label: app.label},
+			Resource:  ResourceMeta{Name: meta.Name, Label: meta.Label},
+			ActionURL: s.resourceURL(app.name, meta.Name, rawID) + "/delete",
+			BackURL:   s.resourceURL(app.name, meta.Name, rawID),
+			ObjectID:  rawID,
+		}
+		s.render(w, r, "delete", data)
+	case http.MethodPost:
+		if !s.verifyCSRF(r) {
+			http.Error(w, "csrf token invalid", http.StatusForbidden)
+			return
+		}
+		if err := resource.delete(r.Context(), rawID); err != nil {
+			s.writeError(w, err)
+			return
+		}
+		http.Redirect(w, r, s.resourceListURL(app.name, resource.meta().Name), http.StatusSeeOther)
+	default:
+		w.Header().Set("Allow", strings.Join([]string{http.MethodGet, http.MethodPost}, ", "))
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (s *Site) renderResourceForm(w http.ResponseWriter, r *http.Request, app *App, resource resourceRuntime, obj any, errs ValidationErrors, isNew bool) {
+	meta := resource.meta()
+	title := "Edit " + meta.Label
+	actionURL := s.resourceURL(app.name, meta.Name, resource.idString(obj))
+	deleteURL := actionURL + "/delete"
+	if isNew {
+		title = "New " + meta.Label
+		actionURL = s.resourceURL(app.name, meta.Name, "new")
+		deleteURL = ""
+	}
+	base := s.basePage(r, title)
+	base.CSRFToken = s.ensureCSRF(w, r)
+	data := formPageData{
+		pageData:  base,
+		App:       AppMeta{Name: app.name, Label: app.label},
+		Resource:  ResourceMeta{Name: meta.Name, Label: meta.Label},
+		ActionURL: actionURL,
+		BackURL:   s.resourceListURL(app.name, meta.Name),
+		DeleteURL: deleteURL,
+		IsNew:     isNew,
+		Errors:    errs,
+		Fieldsets: buildFieldsets(resource, obj, errs),
+	}
+	s.render(w, r, "form", data)
+}
+
+func (s *Site) lookup(appName, resourceName string) (*App, resourceRuntime, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	app := s.apps[appName]
+	if app == nil {
+		return nil, nil, false
+	}
+	resource := app.resources[resourceName]
+	if resource == nil {
+		return nil, nil, false
+	}
+	return app, resource, true
+}
+
+func (s *Site) writeError(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, ErrNotFound):
+		http.Error(w, "not found", http.StatusNotFound)
+	default:
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func (s *Site) resourceListURL(appName, resourceName string) string {
+	return s.config.BasePath + "/" + appName + "/" + resourceName + "/"
+}
+
+func (s *Site) resourceURL(appName, resourceName, suffix string) string {
+	url := s.config.BasePath + "/" + appName + "/" + resourceName
+	if suffix != "" {
+		url += "/" + suffix
+	}
+	return url
+}
+
+func allowedSorts(config ListConfig) []string {
+	values := make([]string, 0, len(config.Sort)+len(config.Columns))
+	for _, sortField := range config.Sort {
+		values = append(values, sortField.Field)
+	}
+	values = append(values, config.Columns...)
+	return values
+}
+
+func filterNames(filters []Filter) []string {
+	values := make([]string, 0, len(filters))
+	for _, filter := range filters {
+		values = append(values, filter.Name)
+	}
+	return values
+}
+
+func filterViews(filters []Filter, selected map[string][]string) []filterView {
+	views := make([]filterView, 0, len(filters))
+	for _, filter := range filters {
+		choices := filter.Choices
+		if len(choices) == 0 {
+			choices = []Choice{{Value: "true", Label: "Yes"}, {Value: "false", Label: "No"}}
+		}
+		views = append(views, filterView{
+			Name:    filter.Name,
+			Label:   displayLabel(filter.Name, filter.Label),
+			Choices: choices,
+			Values:  selected[filter.Name],
+		})
+	}
+	return views
+}
+
+func fieldsByNames(fields []Field, names []string) []Field {
+	if len(names) == 0 {
+		return fields
+	}
+	byName := map[string]Field{}
+	for _, field := range fields {
+		byName[field.name()] = field
+	}
+	selected := make([]Field, 0, len(names))
+	for _, name := range names {
+		if field, ok := byName[name]; ok {
+			selected = append(selected, field)
+		}
+	}
+	return selected
+}
+
+func buildFieldsets(resource resourceRuntime, obj any, errs ValidationErrors) []fieldsetView {
+	fields := resource.fields()
+	fieldsets := resource.fieldsets()
+	if len(fieldsets) == 0 {
+		names := make([]string, 0, len(fields))
+		for _, field := range fields {
+			names = append(names, field.name())
+		}
+		fieldsets = []Fieldset{{Fields: names}}
+	}
+	byName := map[string]Field{}
+	for _, field := range fields {
+		byName[field.name()] = field
+	}
+	views := make([]fieldsetView, 0, len(fieldsets))
+	for _, fieldset := range fieldsets {
+		view := fieldsetView{
+			Title:       fieldset.Title,
+			Description: fieldset.Description,
+			Collapsed:   fieldset.Collapsed,
+		}
+		names := fieldset.Fields
+		if len(names) == 0 {
+			for _, row := range fieldset.Rows {
+				names = append(names, row...)
+			}
+		}
+		for _, name := range names {
+			field, ok := byName[name]
+			if !ok {
+				continue
+			}
+			value := resource.fieldValue(obj, name)
+			view.Fields = append(view.Fields, fieldView{
+				Field:    field,
+				Value:    value,
+				Widget:   RenderWidget(WidgetContext{Field: field, Value: value, Errors: errs}),
+				Readonly: field.ReadonlyValue,
+				Display:  formatValue(value),
+			})
+		}
+		views = append(views, view)
+	}
+	return views
 }

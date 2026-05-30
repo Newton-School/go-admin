@@ -1,0 +1,27 @@
+{{define "delete"}}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.PageTitle}} - {{.SiteTitle}}</title>
+  <link rel="stylesheet" href="{{.BasePath}}/static/admin.css">
+</head>
+<body>
+  <header class="ga-header">
+    <a class="ga-brand" href="{{.BasePath}}/">{{.SiteTitle}}</a>
+    <nav>{{.App.Label}} / <a href="{{.BackURL}}">{{.Resource.Label}}</a></nav>
+  </header>
+  <main class="ga-shell">
+    <h1>{{.PageTitle}}</h1>
+    <p>Delete {{.Resource.Label}} #{{.ObjectID}}?</p>
+    <form method="post" action="{{.ActionURL}}">
+      <input type="hidden" name="go_admin_csrf" value="{{.CSRFToken}}">
+      <button class="ga-danger" type="submit">Delete</button>
+      <a href="{{.BackURL}}">Cancel</a>
+    </form>
+  </main>
+</body>
+</html>
+{{end}}
+

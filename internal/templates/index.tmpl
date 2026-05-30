@@ -1,0 +1,32 @@
+{{define "index"}}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.PageTitle}} - {{.SiteTitle}}</title>
+  <link rel="stylesheet" href="{{.BasePath}}/static/admin.css">
+</head>
+<body>
+  <header class="ga-header">
+    <a class="ga-brand" href="{{.BasePath}}/">{{.SiteTitle}}</a>
+  </header>
+  <main class="ga-shell">
+    <h1>{{.PageTitle}}</h1>
+    {{range .Apps}}
+      {{$app := .}}
+      <section class="ga-section">
+        <h2>{{.Label}}</h2>
+        <div class="ga-grid">
+          {{range .Resources}}
+            <a class="ga-resource" href="{{$.BasePath}}/{{$app.Name}}/{{.Name}}/">{{.Label}}</a>
+          {{end}}
+        </div>
+      </section>
+    {{else}}
+      <p>No resources registered.</p>
+    {{end}}
+  </main>
+</body>
+</html>
+{{end}}

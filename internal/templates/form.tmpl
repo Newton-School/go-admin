@@ -1,0 +1,48 @@
+{{define "form"}}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.PageTitle}} - {{.SiteTitle}}</title>
+  <link rel="stylesheet" href="{{.BasePath}}/static/admin.css">
+  <script src="{{.BasePath}}/static/admin.js" defer></script>
+</head>
+<body>
+  <header class="ga-header">
+    <a class="ga-brand" href="{{.BasePath}}/">{{.SiteTitle}}</a>
+    <nav>{{.App.Label}} / <a href="{{.BackURL}}">{{.Resource.Label}}</a></nav>
+  </header>
+  <main class="ga-shell">
+    <div class="ga-title-row">
+      <h1>{{.PageTitle}}</h1>
+      {{if .DeleteURL}}<a class="ga-danger-link" href="{{.DeleteURL}}">Delete</a>{{end}}
+    </div>
+    <form class="ga-form" method="post" action="{{.ActionURL}}">
+      <input type="hidden" name="go_admin_csrf" value="{{.CSRFToken}}">
+      {{range .Fieldsets}}
+        <fieldset {{if .Collapsed}}class="ga-collapsed"{{end}}>
+          {{if .Title}}<legend>{{.Title}}</legend>{{end}}
+          {{if .Description}}<p class="ga-muted">{{.Description}}</p>{{end}}
+          {{range .Fields}}
+            {{if .Readonly}}
+              <div class="ga-field">
+                <label>{{.Field.LabelValue}}</label>
+                <div class="ga-readonly">{{.Display}}</div>
+              </div>
+            {{else}}
+              {{safe .Widget}}
+            {{end}}
+          {{end}}
+        </fieldset>
+      {{end}}
+      <div class="ga-actions">
+        <button type="submit">Save</button>
+        <a href="{{.BackURL}}">Cancel</a>
+      </div>
+    </form>
+  </main>
+</body>
+</html>
+{{end}}
+

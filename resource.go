@@ -87,6 +87,16 @@ type resourceMeta struct {
 
 type resourceRuntime interface {
 	meta() resourceMeta
+	fields() []Field
+	listConfig() ListConfig
+	fieldsets() []Fieldset
+	list(context.Context, Query) (untypedPage, error)
+	get(context.Context, string) (any, error)
+	create(context.Context, urlValues) (any, ValidationErrors, error)
+	update(context.Context, string, urlValues) (any, ValidationErrors, error)
+	delete(context.Context, string) error
+	idString(any) string
+	fieldValue(any, string) any
 }
 
 func validateResource[T any, ID comparable](resource Resource[T, ID]) error {
