@@ -31,6 +31,14 @@ export default defineConfig({
             { label: 'Example App', slug: 'getting-started/example-app' },
           ],
         },
+        {
+          label: 'Guides',
+          items: [
+            { label: 'Core Concepts', slug: 'guide/core-concepts' },
+            { label: 'Apps And Resources', slug: 'guide/apps-and-resources' },
+            { label: 'Repositories', slug: 'guide/repositories' },
+          ],
+        },
       ],
     }),
   ],
