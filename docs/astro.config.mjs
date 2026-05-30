@@ -39,6 +39,8 @@ export default defineConfig({
             { label: 'Repositories', slug: 'guide/repositories' },
             { label: 'Fields And Forms', slug: 'guide/fields-and-forms' },
             { label: 'List Pages', slug: 'guide/list-pages' },
+            { label: 'Actions', slug: 'guide/actions' },
+            { label: 'JSON API', slug: 'guide/json-api' },
           ],
         },
       ],
