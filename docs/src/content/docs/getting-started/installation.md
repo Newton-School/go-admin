@@ -17,8 +17,10 @@ description: Install go-admin and prepare a Go service for an admin panel.
 Run this from your application module:
 
 ```bash
-go get github.com/Newton-School/go-admin
+go get github.com/Newton-School/go-admin@v0.1.0
 ```
+
+Use an explicit tag so your application keeps the same SDK version until you choose to upgrade.
 
 Import the package:
 
@@ -62,4 +64,3 @@ npm run build
 ```
 
 The built static site is written to `docs/dist/`.
-

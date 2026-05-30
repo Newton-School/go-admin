@@ -5,7 +5,7 @@
 ## Install
 
 ```bash
-go get github.com/Newton-School/go-admin
+go get github.com/Newton-School/go-admin@v0.1.0
 ```
 
 Requires Go `1.26` or newer.

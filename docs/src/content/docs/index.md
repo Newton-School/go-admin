@@ -31,7 +31,7 @@ hero:
 ## Install
 
 ```bash
-go get github.com/Newton-School/go-admin
+go get github.com/Newton-School/go-admin@v0.1.0
 ```
 
 ## Documentation Map
