@@ -578,8 +578,11 @@ func RenderWidget(ctx WidgetContext) template.HTML {
 	placeholder := html.EscapeString(field.PlaceholderValue)
 
 	var b strings.Builder
-	b.WriteString(`<div class="ga-field">`)
+	b.WriteString(`<div class="form-row field-`)
+	b.WriteString(name)
+	b.WriteString(`"><div>`)
 	b.WriteString(`<label for="`)
+	b.WriteString(`id_`)
 	b.WriteString(name)
 	b.WriteString(`">`)
 	b.WriteString(label)
@@ -590,7 +593,7 @@ func RenderWidget(ctx WidgetContext) template.HTML {
 
 	switch field.Kind {
 	case FieldKindTextarea, FieldKindJSON:
-		b.WriteString(`<textarea id="`)
+		b.WriteString(`<textarea id="id_`)
 		b.WriteString(name)
 		b.WriteString(`" name="`)
 		b.WriteString(name)
@@ -600,7 +603,7 @@ func RenderWidget(ctx WidgetContext) template.HTML {
 		b.WriteString(value)
 		b.WriteString(`</textarea>`)
 	case FieldKindBool:
-		b.WriteString(`<input type="checkbox" id="`)
+		b.WriteString(`<input type="checkbox" id="id_`)
 		b.WriteString(name)
 		b.WriteString(`" name="`)
 		b.WriteString(name)
@@ -626,18 +629,18 @@ func RenderWidget(ctx WidgetContext) template.HTML {
 	}
 
 	if field.HelpValue != "" {
-		b.WriteString(`<p class="ga-help">`)
+		b.WriteString(`<div class="help">`)
 		b.WriteString(html.EscapeString(field.HelpValue))
-		b.WriteString(`</p>`)
+		b.WriteString(`</div>`)
 	}
 	if ctx.Errors != nil {
 		if message := ctx.Errors.Get(field.NameValue); message != "" {
-			b.WriteString(`<p class="ga-error">`)
+			b.WriteString(`<div class="errornote">`)
 			b.WriteString(html.EscapeString(message))
-			b.WriteString(`</p>`)
+			b.WriteString(`</div>`)
 		}
 	}
-	b.WriteString(`</div>`)
+	b.WriteString(`</div></div>`)
 
 	return template.HTML(b.String())
 }
@@ -645,7 +648,7 @@ func RenderWidget(ctx WidgetContext) template.HTML {
 func renderInput(b *strings.Builder, inputType, name, value, placeholder string) {
 	b.WriteString(`<input type="`)
 	b.WriteString(inputType)
-	b.WriteString(`" id="`)
+	b.WriteString(`" id="id_`)
 	b.WriteString(name)
 	b.WriteString(`" name="`)
 	b.WriteString(name)
@@ -657,7 +660,7 @@ func renderInput(b *strings.Builder, inputType, name, value, placeholder string)
 }
 
 func renderSelect(b *strings.Builder, name, value string, choices []Choice, multiple bool) {
-	b.WriteString(`<select id="`)
+	b.WriteString(`<select id="id_`)
 	b.WriteString(name)
 	b.WriteString(`" name="`)
 	b.WriteString(name)

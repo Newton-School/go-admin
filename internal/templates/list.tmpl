@@ -8,68 +8,84 @@
   <link rel="stylesheet" href="{{.BasePath}}/static/admin.css">
   <script src="{{.BasePath}}/static/admin.js" defer></script>
 </head>
-<body>
-  <header class="ga-header">
-    <a class="ga-brand" href="{{.BasePath}}/">{{.SiteTitle}}</a>
-    <nav>{{.App.Label}} / {{.Resource.Label}}</nav>
-  </header>
-  <main class="ga-shell">
-    <div class="ga-title-row">
-      <h1>{{.Resource.Label}}</h1>
-      <a class="ga-button" href="{{.NewURL}}">Add {{.Resource.Label}}</a>
+<body class="app-{{.App.Name}} model-{{.Resource.Name}} change-list">
+  <div id="container">
+    <div id="header">
+      <div id="branding">
+        <h1 id="site-name"><a href="{{.BasePath}}/">{{.SiteTitle}}</a></h1>
+      </div>
     </div>
-    <form class="ga-toolbar" method="get">
-      <input type="search" name="q" value="{{.Search}}" placeholder="Search">
-      {{range .Filters}}
-        <label>
-          {{.Label}}
-          <select name="{{.Name}}">
-            <option value="">All</option>
-            {{range .Choices}}
-              <option value="{{.Value}}">{{.Label}}</option>
-            {{end}}
-          </select>
-        </label>
-      {{end}}
-      <button type="submit">Apply</button>
-    </form>
-    {{if .Actions}}
-    <form class="ga-actionbar" method="post" action="{{.ActionURL}}" data-ga-action-form>
-      <input type="hidden" name="go_admin_csrf" value="{{.CSRFToken}}">
-      <label>
-        Action
-        <select name="_action" data-ga-action-select>
-          {{range .Actions}}
-            <option value="{{$.BasePath}}/{{$.App.Name}}/{{$.Resource.Name}}/actions/{{.Name}}">{{.Label}}</option>
+    <div class="breadcrumbs">
+      <a href="{{.BasePath}}/">Home</a> &rsaquo;
+      <a href="{{.BasePath}}/{{.App.Name}}/">{{.App.Label}}</a> &rsaquo;
+      {{.Resource.Label}}
+    </div>
+    <div id="content" class="flex">
+      <h1>Select {{.Resource.Label}} to change</h1>
+      <ul class="object-tools">
+        <li><a href="{{.NewURL}}" class="addlink">Add {{.Resource.Label}}</a></li>
+      </ul>
+      <div id="content-main">
+        <div id="changelist" class="module">
+          <div id="toolbar">
+            <form id="changelist-search" method="get">
+              <label for="searchbar">Search:</label>
+              <input type="search" size="40" name="q" value="{{.Search}}" id="searchbar">
+              {{range .Filters}}
+                <label for="filter-{{.Name}}">{{.Label}}:</label>
+                <select name="{{.Name}}" id="filter-{{.Name}}">
+                  <option value="">All</option>
+                  {{range .Choices}}
+                    <option value="{{.Value}}">{{.Label}}</option>
+                  {{end}}
+                </select>
+              {{end}}
+              <input type="submit" value="Search">
+            </form>
+          </div>
+          {{if .Actions}}
+          <form id="changelist-form" method="post" action="{{.ActionURL}}" data-ga-action-form>
+            <input type="hidden" name="go_admin_csrf" value="{{.CSRFToken}}">
+            <div class="actions">
+              <label>Action:
+                <select name="_action" data-ga-action-select>
+                  {{range .Actions}}
+                    <option value="{{$.BasePath}}/{{$.App.Name}}/{{$.Resource.Name}}/actions/{{.Name}}">{{.Label}}</option>
+                  {{end}}
+                </select>
+              </label>
+              <button type="submit">Go</button>
+            </div>
           {{end}}
-        </select>
-      </label>
-      <button type="submit">Run</button>
-    {{end}}
-    <table class="ga-table">
-      <thead>
-        <tr>
-          {{if .Actions}}<th>Select</th>{{end}}
-          {{range .Columns}}<th>{{.LabelValue}}</th>{{end}}
-        </tr>
-      </thead>
-      <tbody>
-        {{range .Rows}}
-          {{$row := .}}
-          <tr>
-            {{if $.Actions}}<td><input type="checkbox" name="ids" value="{{$row.ID}}"></td>{{end}}
-            {{range $i, $cell := .Cells}}
-              <td>{{if eq $i 0}}<a href="{{$.BasePath}}/{{$.App.Name}}/{{$.Resource.Name}}/{{$row.ID}}">{{formatValue $cell.Value}}</a>{{else}}{{formatValue $cell.Value}}{{end}}</td>
-            {{end}}
-          </tr>
-        {{else}}
-          <tr><td colspan="{{len .Columns}}">No rows found.</td></tr>
-        {{end}}
-      </tbody>
-    </table>
-    {{if .Actions}}</form>{{end}}
-    <p class="ga-muted">Showing page {{.Page.Page}} with {{len .Rows}} of {{.Page.Total}} rows.</p>
-  </main>
+          <div class="results">
+            <table id="result_list">
+              <thead>
+                <tr>
+                  {{if .Actions}}<th scope="col" class="action-checkbox-column">Select</th>{{end}}
+                  {{range .Columns}}<th scope="col">{{.LabelValue}}</th>{{end}}
+                </tr>
+              </thead>
+              <tbody>
+                {{range .Rows}}
+                  {{$row := .}}
+                  <tr>
+                    {{if $.Actions}}<td class="action-checkbox"><input type="checkbox" name="ids" value="{{$row.ID}}"></td>{{end}}
+                    {{range $i, $cell := .Cells}}
+                      <td>{{if eq $i 0}}<a href="{{$.BasePath}}/{{$.App.Name}}/{{$.Resource.Name}}/{{$row.ID}}">{{formatValue $cell.Value}}</a>{{else}}{{formatValue $cell.Value}}{{end}}</td>
+                    {{end}}
+                  </tr>
+                {{else}}
+                  <tr><td colspan="99">No rows found.</td></tr>
+                {{end}}
+              </tbody>
+            </table>
+          </div>
+          {{if .Actions}}</form>{{end}}
+          <p class="paginator">Page {{.Page.Page}}. {{len .Rows}} of {{.Page.Total}} rows shown.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
 {{end}}
