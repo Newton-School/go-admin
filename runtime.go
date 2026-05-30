@@ -11,10 +11,10 @@ import (
 type urlValues = url.Values
 
 type untypedPage struct {
-	Items   []any
-	Total   int
-	Page    int
-	PerPage int
+	Items   []any `json:"items"`
+	Total   int   `json:"total"`
+	Page    int   `json:"page"`
+	PerPage int   `json:"per_page"`
 }
 
 func (r *typedResource[T, ID]) fields() []Field {
@@ -81,12 +81,85 @@ func (r *typedResource[T, ID]) update(ctx context.Context, rawID string, values 
 	return updated, nil, err
 }
 
+func (r *typedResource[T, ID]) createJSON(ctx context.Context, values map[string]any) (any, ValidationErrors, error) {
+	var obj T
+	errs := BindJSON(r.resource.Fields, values, &obj, false)
+	if !errs.Empty() {
+		return obj, errs, nil
+	}
+	created, err := r.resource.Repository.Create(ctx, obj)
+	return created, nil, err
+}
+
+func (r *typedResource[T, ID]) updateJSON(ctx context.Context, rawID string, values map[string]any) (any, ValidationErrors, error) {
+	id, err := r.resource.ID.Parse(rawID)
+	if err != nil {
+		return nil, nil, err
+	}
+	obj, err := r.resource.Repository.Get(ctx, id)
+	if err != nil {
+		return nil, nil, err
+	}
+	errs := BindJSON(r.resource.Fields, values, &obj, true)
+	if !errs.Empty() {
+		return obj, errs, nil
+	}
+	updated, err := r.resource.Repository.Update(ctx, id, obj)
+	return updated, nil, err
+}
+
 func (r *typedResource[T, ID]) delete(ctx context.Context, rawID string) error {
 	id, err := r.resource.ID.Parse(rawID)
 	if err != nil {
 		return err
 	}
 	return r.resource.Repository.Delete(ctx, id)
+}
+
+func (r *typedResource[T, ID]) runAction(ctx context.Context, name string, rawIDs []string) (ActionResult, error) {
+	for _, action := range r.resource.Actions {
+		if action.Name != name {
+			continue
+		}
+		ids := make([]ID, 0, len(rawIDs))
+		objects := make([]T, 0, len(rawIDs))
+		for _, rawID := range rawIDs {
+			id, err := r.resource.ID.Parse(rawID)
+			if err != nil {
+				return ActionResult{}, err
+			}
+			obj, err := r.resource.Repository.Get(ctx, id)
+			if err != nil {
+				return ActionResult{}, err
+			}
+			ids = append(ids, id)
+			objects = append(objects, obj)
+		}
+		if action.Run == nil {
+			return ActionResult{}, fmt.Errorf("action %q has no runner", name)
+		}
+		return action.Run(ctx, ActionRequest[T, ID]{
+			Resource: r.resource,
+			IDs:      ids,
+			Objects:  objects,
+		})
+	}
+	return ActionResult{}, ErrNotFound
+}
+
+func (r *typedResource[T, ID]) lookup(ctx context.Context, fieldName string, query Query) ([]Choice, error) {
+	page, err := r.resource.Repository.List(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	choices := make([]Choice, 0, len(page.Items))
+	for _, item := range page.Items {
+		choices = append(choices, Choice{
+			Value: r.idString(item),
+			Label: formatValue(r.fieldValue(item, fieldName)),
+		})
+	}
+	return choices, nil
 }
 
 func (r *typedResource[T, ID]) idString(obj any) string {

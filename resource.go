@@ -94,7 +94,11 @@ type resourceRuntime interface {
 	get(context.Context, string) (any, error)
 	create(context.Context, urlValues) (any, ValidationErrors, error)
 	update(context.Context, string, urlValues) (any, ValidationErrors, error)
+	createJSON(context.Context, map[string]any) (any, ValidationErrors, error)
+	updateJSON(context.Context, string, map[string]any) (any, ValidationErrors, error)
 	delete(context.Context, string) error
+	runAction(context.Context, string, []string) (ActionResult, error)
+	lookup(context.Context, string, Query) ([]Choice, error)
 	idString(any) string
 	fieldValue(any, string) any
 }

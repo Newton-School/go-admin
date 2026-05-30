@@ -207,6 +207,105 @@ func BindForm(fields []Field, values url.Values, dst any) ValidationErrors {
 	return errs
 }
 
+// BindJSON applies JSON object values to a pointer to a struct using admin fields.
+func BindJSON(fields []Field, values map[string]any, dst any, partial bool) ValidationErrors {
+	errs := ValidationErrors{}
+	target, ok := targetStruct(dst)
+	if !ok {
+		errs.add("_", "target must be a pointer to a struct")
+		return errs
+	}
+
+	for _, field := range fields {
+		if field.ReadonlyValue {
+			continue
+		}
+		value, exists := values[field.NameValue]
+		if !exists {
+			if field.RequiredValue && !partial {
+				errs.add(field.NameValue, fmt.Sprintf("%s is required", field.label()))
+			}
+			continue
+		}
+		if field.RequiredValue && isEmptyJSONValue(value) {
+			errs.add(field.NameValue, fmt.Sprintf("%s is required", field.label()))
+			continue
+		}
+		structField, ok := findStructField(target, field.NameValue)
+		if !ok {
+			continue
+		}
+		rawValues, err := jsonValueStrings(value, field)
+		if err != nil {
+			errs.add(field.NameValue, err.Error())
+			continue
+		}
+		if isEmptyInput(rawValues) {
+			continue
+		}
+		if err := setFieldValue(structField, field, rawValues); err != nil {
+			errs.add(field.NameValue, err.Error())
+		}
+	}
+
+	return errs
+}
+
+func isEmptyJSONValue(value any) bool {
+	if value == nil {
+		return true
+	}
+	switch typed := value.(type) {
+	case string:
+		return strings.TrimSpace(typed) == ""
+	case []any:
+		return len(typed) == 0
+	default:
+		return false
+	}
+}
+
+func jsonValueStrings(value any, field Field) ([]string, error) {
+	if field.Kind == FieldKindJSON {
+		encoded, err := json.Marshal(value)
+		if err != nil {
+			return nil, fmt.Errorf("%s must be valid JSON", field.label())
+		}
+		return []string{string(encoded)}, nil
+	}
+	if field.Kind == FieldKindMultiSelect {
+		switch typed := value.(type) {
+		case []any:
+			values := make([]string, 0, len(typed))
+			for _, item := range typed {
+				values = append(values, jsonScalarString(item))
+			}
+			return values, nil
+		case []string:
+			return append([]string(nil), typed...), nil
+		default:
+			return []string{jsonScalarString(value)}, nil
+		}
+	}
+	return []string{jsonScalarString(value)}, nil
+}
+
+func jsonScalarString(value any) string {
+	switch typed := value.(type) {
+	case string:
+		return typed
+	case float64:
+		return strconv.FormatFloat(typed, 'f', -1, 64)
+	case bool:
+		if typed {
+			return "true"
+		}
+		return "false"
+	default:
+		return fmt.Sprint(value)
+	}
+}
+
 func targetStruct(dst any) (reflect.Value, bool) {
 	value := reflect.ValueOf(dst)
 	if !value.IsValid() || value.Kind() != reflect.Pointer || value.IsNil() {

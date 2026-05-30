@@ -35,15 +35,15 @@ type App struct {
 
 // AppMeta is a stable description of a registered app.
 type AppMeta struct {
-	Name      string
-	Label     string
-	Resources []ResourceMeta
+	Name      string         `json:"name"`
+	Label     string         `json:"label"`
+	Resources []ResourceMeta `json:"resources"`
 }
 
 // ResourceMeta is a stable description of a registered resource.
 type ResourceMeta struct {
-	Name  string
-	Label string
+	Name  string `json:"name"`
+	Label string `json:"label"`
 }
 
 // New creates an admin site.
@@ -136,7 +136,7 @@ func (s *Site) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if parts[0] == "api" {
-		http.NotFound(w, r)
+		s.handleAPI(w, r, parts[1:])
 		return
 	}
 	if len(parts) == 1 {
