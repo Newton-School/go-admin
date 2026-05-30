@@ -52,6 +52,13 @@ export default defineConfig({
             { label: 'API Routes', slug: 'reference/api-routes' },
           ],
         },
+        {
+          label: 'Deployment',
+          items: [
+            { label: 'Admin Service', slug: 'deployment/admin-service' },
+            { label: 'Documentation Site', slug: 'deployment/documentation-site' },
+          ],
+        },
       ],
     }),
   ],
