@@ -37,6 +37,8 @@ export default defineConfig({
             { label: 'Core Concepts', slug: 'guide/core-concepts' },
             { label: 'Apps And Resources', slug: 'guide/apps-and-resources' },
             { label: 'Repositories', slug: 'guide/repositories' },
+            { label: 'Fields And Forms', slug: 'guide/fields-and-forms' },
+            { label: 'List Pages', slug: 'guide/list-pages' },
           ],
         },
       ],
