@@ -41,6 +41,7 @@ export default defineConfig({
             { label: 'List Pages', slug: 'guide/list-pages' },
             { label: 'Actions', slug: 'guide/actions' },
             { label: 'JSON API', slug: 'guide/json-api' },
+            { label: 'Testing', slug: 'guide/testing' },
           ],
         },
         {
