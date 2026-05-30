@@ -3,4 +3,6 @@
 coverage.out
 dist/
 tmp/
-
+docs/node_modules/
+docs/dist/
+docs/.astro/
