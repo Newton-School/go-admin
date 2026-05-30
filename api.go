@@ -59,6 +59,9 @@ func (s *Site) handleAPICollection(w http.ResponseWriter, r *http.Request, _ *Ap
 			AllowedSorts:   allowedSorts(config),
 			FilterNames:    filterNames(config.Filters),
 		})
+		if len(query.Sort) == 0 {
+			query.Sort = append(query.Sort, config.Sort...)
+		}
 		page, err := resource.list(r.Context(), query)
 		if err != nil {
 			writeJSONRepositoryError(w, err)

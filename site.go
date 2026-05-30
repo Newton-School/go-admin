@@ -250,6 +250,9 @@ func (s *Site) handleList(w http.ResponseWriter, r *http.Request, app *App, reso
 		AllowedSorts:   allowedSorts(listConfig),
 		FilterNames:    filterNames(listConfig.Filters),
 	})
+	if len(query.Sort) == 0 {
+		query.Sort = append(query.Sort, listConfig.Sort...)
+	}
 	page, err := resource.list(r.Context(), query)
 	if err != nil {
 		s.writeError(w, err)

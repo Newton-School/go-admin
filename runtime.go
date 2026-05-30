@@ -176,7 +176,14 @@ func (r *typedResource[T, ID]) lookup(ctx context.Context, fieldName string, que
 }
 
 func (r *typedResource[T, ID]) idString(obj any) string {
-	value, ok := readFieldValue(obj, "id")
+	var value any
+	var ok bool
+	if r.resource.IDField != "" {
+		value, ok = readFieldValue(obj, r.resource.IDField)
+	}
+	if !ok {
+		value, ok = readFieldValue(obj, "id")
+	}
 	if !ok {
 		value, ok = readFieldValue(obj, "ID")
 	}

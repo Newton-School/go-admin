@@ -23,6 +23,7 @@ type Resource[T any, ID comparable] struct {
 	Label      string
 	Repository Repository[T, ID]
 	ID         IDCodec[ID]
+	IDField    string
 	Fields     []Field
 	List       ListConfig
 	Fieldsets  []Fieldset
