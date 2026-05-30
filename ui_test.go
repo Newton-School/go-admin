@@ -19,6 +19,7 @@ func TestAdminUsesPlainDjangoLikeMarkup(t *testing.T) {
 		`id="content"`,
 		`class="module"`,
 		`<caption>`,
+		`rel="icon" href="data:,"`,
 	)
 	assertBodyNotContains(t, index.Body.String(), `ga-grid`, `ga-resource`, `ga-title-row`)
 
