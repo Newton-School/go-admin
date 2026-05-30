@@ -17,7 +17,7 @@ description: Install go-admin and prepare a Go service for an admin panel.
 Run this from your application module:
 
 ```bash
-go get github.com/Newton-School/go-admin@v0.1.1
+go get github.com/Newton-School/go-admin@v0.1.2
 ```
 
 Use an explicit tag so your application keeps the same SDK version until you choose to upgrade.
