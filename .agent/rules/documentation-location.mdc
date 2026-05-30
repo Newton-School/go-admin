@@ -1,0 +1,28 @@
+# Documentation Location Rules
+
+All product, SDK, guide, API, reference, deployment, and example documentation must live in the single top-level `docs/` website.
+
+## Required Location
+
+- Use `docs/src/content/docs/` for documentation pages.
+- Use `docs/astro.config.mjs` for documentation navigation and Starlight configuration.
+- Use `docs/src/assets/`, `docs/src/styles/`, and `docs/public/` only for documentation-site assets.
+- Do not create another documentation folder anywhere in the repository.
+
+## Prohibited Locations
+
+- Do not add new documentation files outside `docs/`.
+- Do not create `README.md`, `docs/`, `documentation/`, `wiki/`, `guides/`, `examples/*/README.md`, or similar docs locations outside the top-level `docs/` website.
+- Do not add SDK usage guides, API references, tutorials, migration notes, architecture docs, or deployment notes inside Go package directories, example directories, scripts, or root-level ad hoc files.
+- Do not edit generated documentation output in `docs/dist/`, `docs/.astro/`, or `docs/node_modules/`.
+
+## Existing Outside-Docs Files
+
+- Treat existing root or example README files as legacy entry points only.
+- Do not expand existing outside-docs README content with new documentation.
+- If information in an outside-docs README needs to grow, move the real documentation into `docs/src/content/docs/` and keep the outside file minimal or link-only when explicitly requested.
+
+description: Keep documentation centralized in the Starlight docs site.
+globs:
+alwaysApply: true
+---

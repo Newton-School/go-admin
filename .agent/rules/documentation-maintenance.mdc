@@ -1,0 +1,35 @@
+# Documentation Maintenance Rules
+
+Maintain the documentation as a separately buildable Starlight site under `docs/`.
+
+## Writing Standards
+
+- Document only installed or implemented SDK behavior unless a page is explicitly marked as roadmap.
+- Keep documentation practical: install steps, runnable examples, API contracts, configuration, deployment, and testing guidance.
+- Use concise, direct language. Avoid filler, marketing copy, and speculative claims.
+- Keep code samples aligned with the public module path `github.com/Newton-School/go-admin`.
+- Prefer small, focused pages over large mixed-topic pages.
+
+## Change Workflow
+
+- When adding a documentation page, place it under `docs/src/content/docs/`.
+- Update `docs/astro.config.mjs` sidebar entries whenever a page should be discoverable.
+- Use the local Node version from `docs/.nvmrc`.
+- Run the docs build after documentation changes:
+
+```bash
+cd docs
+nvm use
+npm run build
+```
+
+## Content Boundaries
+
+- Documentation belongs in the Starlight site, not in root-level markdown or package-local markdown.
+- Inline code comments are allowed only for code clarity and must not become user-facing documentation.
+- Generated files, vendored dependencies, and build outputs must not be used as documentation sources.
+
+description: Keep docs accurate, buildable, and scoped to the docs website.
+globs:
+alwaysApply: true
+---
