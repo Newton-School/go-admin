@@ -1,0 +1,160 @@
+# Release Management Rules
+
+This rule is only for creating a published SDK release. Do not invoke it during normal development, documentation edits, CI work, or dependency updates.
+
+## Trigger
+
+Run this rule only when the user explicitly asks to create, cut, publish, or prepare a new release.
+
+Do not run this rule for vague requests about versioning, tags, release notes, changelogs, or install commands. In those cases, answer or edit only what was requested.
+
+## Release Goal
+
+A release must produce all of these results:
+
+- A version update commit on `master` when install references need to change.
+- A new annotated SemVer tag, such as `v0.1.1`.
+- A GitHub Release for that tag.
+- Release notes based on the commits since the previous release tag reachable from `master`.
+
+## Preflight
+
+- Work from `master`.
+- Ensure the working tree is clean before starting release work.
+- Fetch current branch and tags:
+
+```bash
+git fetch origin master --tags
+```
+
+- Confirm local `master` includes the remote release base before tagging.
+- If uncommitted work exists, stop and ask the user before proceeding.
+- If the user did not explicitly authorize publishing a release, do not push commits, tags, or GitHub Releases.
+
+## Find The Previous Release
+
+Find the latest SemVer tag reachable from `master`:
+
+```bash
+git tag --merged master --sort=-v:refname 'v[0-9]*' | head -1
+```
+
+If no previous tag exists, treat the release as the first release and collect changes from the repository root commit.
+
+Collect change data with:
+
+```bash
+git log --first-parent --no-merges --format='- %s (%h)' <previous-tag>..master
+git diff --stat <previous-tag>..master
+```
+
+For the first release, omit `<previous-tag>..`.
+
+## Choose The Next Version
+
+If the user gives a version, use that exact SemVer tag after verifying it does not already exist.
+
+If the user does not give a version, infer the smallest reasonable bump:
+
+- Major: public API removal, incompatible behavior, module path change, or required migration.
+- Minor: new SDK feature, new public API, new admin UI capability, or meaningful documentation site feature.
+- Patch: bug fix, internal cleanup, CI-only change, docs copy change, or release metadata update.
+
+Before `v1.0.0`, incompatible public API changes may use a minor bump unless the user asks otherwise.
+
+## Update Install References
+
+Update user-facing install commands to the new tag:
+
+```bash
+rg 'go get github.com/Newton-School/go-admin@v[0-9]+\.[0-9]+\.[0-9]+' README.md docs/src/content/docs
+```
+
+At minimum, keep these files aligned:
+
+- `README.md`
+- `docs/src/content/docs/index.md`
+- `docs/src/content/docs/getting-started/installation.md`
+
+Do not add release notes or changelogs to `README.md`. Keep the root README minimal.
+
+## Write Release Notes
+
+Use commits and diffs since the previous release. Keep notes practical and user-facing.
+
+Use this shape:
+
+````markdown
+## Highlights
+
+- ...
+
+## Changes
+
+- ...
+
+## Install
+
+```bash
+go get github.com/Newton-School/go-admin@vX.Y.Z
+```
+````
+
+Do not mention agent rules, private workflow details, or internal process unless they materially affect SDK users.
+
+## Verify
+
+Run checks before tagging:
+
+```bash
+go test ./...
+go vet ./...
+cd docs && nvm use && npm run build
+```
+
+If only documentation references changed and the user explicitly asks for a faster release, `go test ./...` and the docs build are still required.
+
+## Commit, Tag, And Release
+
+Commit version-reference changes before tagging:
+
+```bash
+git add README.md docs/src/content/docs
+git commit -m "chore: prepare vX.Y.Z release"
+```
+
+Create an annotated tag on the release commit:
+
+```bash
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+```
+
+Publish the branch and tag only when release publishing is authorized:
+
+```bash
+git push origin master
+git push origin vX.Y.Z
+```
+
+Create the GitHub Release from the pushed tag:
+
+```bash
+gh release create vX.Y.Z --verify-tag --title "vX.Y.Z" --notes-file /tmp/go-admin-release-notes.md
+```
+
+If `gh` is not authenticated or the repository remote is missing, stop and report the exact blocker.
+
+## Final Report
+
+Report:
+
+- New tag.
+- Previous tag used for comparison.
+- Commit range.
+- Verification commands and results.
+- Whether the branch, tag, and GitHub Release were published.
+
+description: Manual release automation for tagged SDK releases and GitHub Releases.
+globs:
+alwaysApply: false
+---

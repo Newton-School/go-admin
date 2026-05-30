@@ -24,6 +24,7 @@ Read and follow these rules before making related changes:
 - `.agent/rules/documentation-location.mdc`: all product documentation must live in the top-level `docs/` website. Do not create new docs locations anywhere else.
 - `.agent/rules/documentation-maintenance.mdc`: maintain docs as a buildable Starlight site and run the docs build after docs changes.
 - `.agent/rules/root-readme.mdc`: keep the root `README.md` minimal. It should contain only basic install/use information and links to the full docs.
+- `.agent/rules/release-management.mdc`: only when explicitly asked to create a release, update install tags, generate release notes, create the Git tag, and publish the GitHub Release.
 
 When rules conflict with a direct user instruction, follow the user instruction and keep the change tightly scoped.
 
