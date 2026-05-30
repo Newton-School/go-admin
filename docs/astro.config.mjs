@@ -23,7 +23,13 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Start',
-          items: [{ label: 'Overview', slug: 'index' }],
+          items: [
+            { label: 'Overview', slug: 'index' },
+            { label: 'Installation', slug: 'getting-started/installation' },
+            { label: 'Quick Start', slug: 'getting-started/quick-start' },
+            { label: 'Secure The Admin', slug: 'getting-started/secure-the-admin' },
+            { label: 'Example App', slug: 'getting-started/example-app' },
+          ],
         },
       ],
     }),
