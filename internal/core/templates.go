@@ -1,4 +1,4 @@
-package admin
+package core
 
 import (
 	"crypto/rand"
@@ -13,7 +13,7 @@ import (
 
 const csrfCookieName = "go_admin_csrf"
 
-//go:embed internal/templates/*.tmpl internal/static/*
+//go:embed assets/templates/*.tmpl assets/static/*
 var embeddedFiles embed.FS
 
 var adminTemplates = template.Must(template.New("admin").
@@ -23,7 +23,7 @@ var adminTemplates = template.Must(template.New("admin").
 			return value
 		},
 	}).
-	ParseFS(embeddedFiles, "internal/templates/*.tmpl"))
+	ParseFS(embeddedFiles, "assets/templates/*.tmpl"))
 
 type pageData struct {
 	SiteTitle string

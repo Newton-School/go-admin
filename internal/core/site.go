@@ -1,4 +1,4 @@
-package admin
+package core
 
 import (
 	"errors"
@@ -210,7 +210,7 @@ func normalizeBasePath(path string) string {
 }
 
 func (s *Site) handleStatic(w http.ResponseWriter, r *http.Request) {
-	staticFS, err := fs.Sub(embeddedFiles, "internal/static")
+	staticFS, err := fs.Sub(embeddedFiles, "assets/static")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
