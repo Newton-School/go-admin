@@ -1,7 +1,8 @@
-package admin
+package admin_test
 
 import (
 	"context"
+	. "github.com/ns/go-admin"
 	"testing"
 )
 

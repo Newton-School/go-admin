@@ -1,9 +1,10 @@
-package admin
+package admin_test
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
+	. "github.com/ns/go-admin"
 	"net/http"
 	"net/http/httptest"
 	"testing"

@@ -35,6 +35,15 @@ http.Handle("/admin/", requireAdmin(site.Handler()))
 
 See `examples/memory` for a runnable in-memory admin and `examples/nethttp` for a custom middleware mount.
 
+## Project Layout
+
+- `admin.go`, `doc.go`: public SDK facade for `github.com/ns/go-admin`.
+- `internal/core`: implementation-only admin runtime.
+- `internal/core/assets`: embedded templates and static files.
+- `tests`: external integration tests against the public SDK API.
+- `examples`: runnable usage examples.
+- `docs`: user-facing guides.
+
 ## What Is Included
 
 - App and resource registry.
@@ -52,4 +61,3 @@ See `examples/memory` for a runnable in-memory admin and `examples/nethttp` for 
 - Audit history.
 - Complex nested inlines.
 - File storage/upload toolkit.
-

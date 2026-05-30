@@ -3,6 +3,7 @@ package admin
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -35,5 +36,23 @@ func TestRepositoryKeepsPublicRootSmall(t *testing.T) {
 		if _, err := os.Stat(filepath.Clean(name)); err != nil {
 			t.Fatalf("expected professional internal layout file %s: %v", name, err)
 		}
+	}
+
+	rootFiles, err := os.ReadDir(".")
+	if err != nil {
+		t.Fatalf("read root: %v", err)
+	}
+	for _, file := range rootFiles {
+		name := file.Name()
+		if name == "structure_test.go" {
+			continue
+		}
+		if strings.HasSuffix(name, "_test.go") {
+			t.Fatalf("integration test %s should live under tests/, not the module root", name)
+		}
+	}
+
+	if _, err := os.Stat(filepath.Clean("tests/handler_test.go")); err != nil {
+		t.Fatalf("expected integration tests under tests/: %v", err)
 	}
 }

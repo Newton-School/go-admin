@@ -1,6 +1,10 @@
-package admin
+package admin_test
 
-import "testing"
+import (
+	"testing"
+
+	. "github.com/ns/go-admin"
+)
 
 func TestInt64IDCodecParsesAndFormats(t *testing.T) {
 	codec := Int64ID()

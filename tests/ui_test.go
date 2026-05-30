@@ -1,4 +1,4 @@
-package admin
+package admin_test
 
 import (
 	"os"
@@ -37,7 +37,7 @@ func TestAdminUsesPlainDjangoLikeMarkup(t *testing.T) {
 }
 
 func TestAdminCSSAvoidsFancyLayoutStyling(t *testing.T) {
-	css, err := os.ReadFile("internal/core/assets/static/admin.css")
+	css, err := os.ReadFile("../internal/core/assets/static/admin.css")
 	if err != nil {
 		t.Fatalf("read css: %v", err)
 	}

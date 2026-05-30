@@ -1,6 +1,7 @@
-package admin
+package admin_test
 
 import (
+	. "github.com/ns/go-admin"
 	"net/http"
 	"strings"
 	"testing"
