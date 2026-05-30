@@ -2,7 +2,8 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 export default defineConfig({
-  site: 'https://newton-school.github.io/go-admin',
+  site: 'https://newton-school.github.io',
+  base: '/go-admin',
   integrations: [
     starlight({
       title: 'go-admin',

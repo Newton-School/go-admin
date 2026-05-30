@@ -9,7 +9,7 @@ hero:
     file: ../../assets/logo.svg
   actions:
     - text: Start building
-      link: /getting-started/installation/
+      link: getting-started/installation/
       icon: right-arrow
     - text: GitHub
       link: https://github.com/Newton-School/go-admin
@@ -38,12 +38,12 @@ go get github.com/Newton-School/go-admin
 
 | Section | Use it for |
 | --- | --- |
-| [Installation](/getting-started/installation/) | Add the module, create a site, and mount the handler. |
-| [Quick Start](/getting-started/quick-start/) | Register your first app and resource. |
-| [Repositories](/guide/repositories/) | Connect resources to a database, ORM, or service layer. |
-| [Fields And Forms](/guide/fields-and-forms/) | Configure widgets, validation, choices, and fieldsets. |
-| [List Pages](/guide/list-pages/) | Configure columns, search, filters, sorting, and pagination. |
-| [Actions](/guide/actions/) | Add bulk operations to list pages and API clients. |
-| [JSON API](/guide/json-api/) | Use the built-in admin API. |
-| [Public Go API](/reference/public-go-api/) | Look up exported functions and types. |
-| [Documentation Site](/deployment/documentation-site/) | Build and host this Starlight site separately. |
+| [Installation](getting-started/installation/) | Add the module, create a site, and mount the handler. |
+| [Quick Start](getting-started/quick-start/) | Register your first app and resource. |
+| [Repositories](guide/repositories/) | Connect resources to a database, ORM, or service layer. |
+| [Fields And Forms](guide/fields-and-forms/) | Configure widgets, validation, choices, and fieldsets. |
+| [List Pages](guide/list-pages/) | Configure columns, search, filters, sorting, and pagination. |
+| [Actions](guide/actions/) | Add bulk operations to list pages and API clients. |
+| [JSON API](guide/json-api/) | Use the built-in admin API. |
+| [Public Go API](reference/public-go-api/) | Look up exported functions and types. |
+| [Documentation Site](deployment/documentation-site/) | Build and host this Starlight site separately. |
