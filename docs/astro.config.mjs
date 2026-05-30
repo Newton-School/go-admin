@@ -1,9 +1,12 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
+const site = process.env.DOCS_SITE ?? 'https://newton-school.github.io';
+const base = process.env.DOCS_BASE ?? (process.env.NODE_ENV === 'production' ? '/go-admin' : '');
+
 export default defineConfig({
-  site: 'https://newton-school.github.io',
-  base: '/go-admin',
+  site,
+  ...(base ? { base } : {}),
   integrations: [
     starlight({
       title: 'go-admin',

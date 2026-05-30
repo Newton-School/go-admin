@@ -18,6 +18,12 @@ npm run dev
 
 The dev server prints the local URL.
 
+Local development serves the site from the root path, for example:
+
+```text
+http://localhost:4321/
+```
+
 ## Production Build
 
 ```bash
@@ -101,6 +107,9 @@ jobs:
       - name: Build docs
         run: npm run build
         working-directory: docs
+        env:
+          DOCS_SITE: https://newton-school.github.io
+          DOCS_BASE: /go-admin
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
@@ -119,14 +128,16 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 
-For the GitHub Pages project URL, `docs/astro.config.mjs` sets:
+For the GitHub Pages project URL, the workflow sets:
 
-```js
-site: 'https://newton-school.github.io',
-base: '/go-admin',
+```text
+DOCS_SITE=https://newton-school.github.io
+DOCS_BASE=/go-admin
 ```
 
-If you host the site at a custom domain, update `site` and remove or change `base` for that final URL.
+`docs/astro.config.mjs` reads those values during the production build. Local development does not set `DOCS_BASE`, so the local docs server stays available at `/`.
+
+If you host the site at a custom domain, update `DOCS_SITE` and remove or change `DOCS_BASE` for that final URL.
 
 ## Static Hosts
 
