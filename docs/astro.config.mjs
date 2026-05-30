@@ -43,6 +43,14 @@ export default defineConfig({
             { label: 'JSON API', slug: 'guide/json-api' },
           ],
         },
+        {
+          label: 'Reference',
+          items: [
+            { label: 'Public Go API', slug: 'reference/public-go-api' },
+            { label: 'Configuration', slug: 'reference/configuration' },
+            { label: 'API Routes', slug: 'reference/api-routes' },
+          ],
+        },
       ],
     }),
   ],
