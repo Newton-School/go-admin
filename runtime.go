@@ -116,6 +116,19 @@ func (r *typedResource[T, ID]) delete(ctx context.Context, rawID string) error {
 	return r.resource.Repository.Delete(ctx, id)
 }
 
+func (r *typedResource[T, ID]) actions() []ActionMeta {
+	actions := make([]ActionMeta, 0, len(r.resource.Actions))
+	for _, action := range r.resource.Actions {
+		actions = append(actions, ActionMeta{
+			Name:        action.Name,
+			Label:       displayLabel(action.Name, action.Label),
+			Description: action.Description,
+			Confirm:     action.Confirm,
+		})
+	}
+	return actions
+}
+
 func (r *typedResource[T, ID]) runAction(ctx context.Context, name string, rawIDs []string) (ActionResult, error) {
 	for _, action := range r.resource.Actions {
 		if action.Name != name {

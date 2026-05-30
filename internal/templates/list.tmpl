@@ -33,9 +33,23 @@
       {{end}}
       <button type="submit">Apply</button>
     </form>
+    {{if .Actions}}
+    <form class="ga-actionbar" method="post" action="{{.ActionURL}}" data-ga-action-form>
+      <input type="hidden" name="go_admin_csrf" value="{{.CSRFToken}}">
+      <label>
+        Action
+        <select name="_action" data-ga-action-select>
+          {{range .Actions}}
+            <option value="{{$.BasePath}}/{{$.App.Name}}/{{$.Resource.Name}}/actions/{{.Name}}">{{.Label}}</option>
+          {{end}}
+        </select>
+      </label>
+      <button type="submit">Run</button>
+    {{end}}
     <table class="ga-table">
       <thead>
         <tr>
+          {{if .Actions}}<th>Select</th>{{end}}
           {{range .Columns}}<th>{{.LabelValue}}</th>{{end}}
         </tr>
       </thead>
@@ -43,6 +57,7 @@
         {{range .Rows}}
           {{$row := .}}
           <tr>
+            {{if $.Actions}}<td><input type="checkbox" name="ids" value="{{$row.ID}}"></td>{{end}}
             {{range $i, $cell := .Cells}}
               <td>{{if eq $i 0}}<a href="{{$.BasePath}}/{{$.App.Name}}/{{$.Resource.Name}}/{{$row.ID}}">{{formatValue $cell.Value}}</a>{{else}}{{formatValue $cell.Value}}{{end}}</td>
             {{end}}
@@ -52,6 +67,7 @@
         {{end}}
       </tbody>
     </table>
+    {{if .Actions}}</form>{{end}}
     <p class="ga-muted">Showing page {{.Page.Page}} with {{len .Rows}} of {{.Page.Total}} rows.</p>
   </main>
 </body>

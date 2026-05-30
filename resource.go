@@ -68,6 +68,14 @@ type Action[T any, ID comparable] struct {
 	Run         func(context.Context, ActionRequest[T, ID]) (ActionResult, error)
 }
 
+// ActionMeta is the public description of a registered action.
+type ActionMeta struct {
+	Name        string `json:"name"`
+	Label       string `json:"label"`
+	Description string `json:"description,omitempty"`
+	Confirm     bool   `json:"confirm"`
+}
+
 // ActionRequest is passed to custom actions.
 type ActionRequest[T any, ID comparable] struct {
 	Resource Resource[T, ID]
@@ -97,6 +105,7 @@ type resourceRuntime interface {
 	createJSON(context.Context, map[string]any) (any, ValidationErrors, error)
 	updateJSON(context.Context, string, map[string]any) (any, ValidationErrors, error)
 	delete(context.Context, string) error
+	actions() []ActionMeta
 	runAction(context.Context, string, []string) (ActionResult, error)
 	lookup(context.Context, string, Query) ([]Choice, error)
 	idString(any) string

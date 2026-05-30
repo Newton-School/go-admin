@@ -156,6 +156,8 @@ func (s *Site) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.handleCreate(w, r, app, resource)
 	case len(parts) == 3:
 		s.handleDetail(w, r, app, resource, parts[2])
+	case len(parts) == 4 && parts[2] == "actions":
+		s.handleHTMLAction(w, r, app, resource, parts[3])
 	case len(parts) == 4 && parts[3] == "delete":
 		s.handleDelete(w, r, app, resource, parts[2])
 	default:
@@ -267,6 +269,10 @@ func (s *Site) handleList(w http.ResponseWriter, r *http.Request, app *App, reso
 	}
 
 	base := s.basePage(r, meta.Label)
+	actions := resource.actions()
+	if len(actions) > 0 {
+		base.CSRFToken = s.ensureCSRF(w, r)
+	}
 	data := listPageData{
 		pageData: base,
 		App:      AppMeta{Name: app.name, Label: app.label},
@@ -283,7 +289,11 @@ func (s *Site) handleList(w http.ResponseWriter, r *http.Request, app *App, reso
 			Page:    page.Page,
 			PerPage: page.PerPage,
 		},
-		NewURL: s.resourceURL(app.name, meta.Name, "new"),
+		NewURL:  s.resourceURL(app.name, meta.Name, "new"),
+		Actions: actions,
+	}
+	if len(actions) > 0 {
+		data.ActionURL = s.resourceURL(app.name, meta.Name, "actions/"+actions[0].Name)
 	}
 	s.render(w, r, "list", data)
 }
@@ -386,6 +396,32 @@ func (s *Site) handleDelete(w http.ResponseWriter, r *http.Request, app *App, re
 		w.Header().Set("Allow", strings.Join([]string{http.MethodGet, http.MethodPost}, ", "))
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
+}
+
+func (s *Site) handleHTMLAction(w http.ResponseWriter, r *http.Request, app *App, resource resourceRuntime, actionName string) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if !s.verifyCSRF(r) {
+		http.Error(w, "csrf token invalid", http.StatusForbidden)
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "invalid form", http.StatusBadRequest)
+		return
+	}
+	ids := r.PostForm["ids"]
+	if len(ids) == 0 {
+		http.Error(w, "select at least one row", http.StatusBadRequest)
+		return
+	}
+	if _, err := resource.runAction(r.Context(), actionName, ids); err != nil {
+		s.writeError(w, err)
+		return
+	}
+	http.Redirect(w, r, s.resourceListURL(app.name, resource.meta().Name), http.StatusSeeOther)
 }
 
 func (s *Site) renderResourceForm(w http.ResponseWriter, r *http.Request, app *App, resource resourceRuntime, obj any, errs ValidationErrors, isNew bool) {

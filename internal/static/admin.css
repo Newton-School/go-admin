@@ -62,6 +62,18 @@ a {
   border-radius: 8px;
 }
 
+.ga-actionbar {
+  align-items: end;
+  background: var(--ga-panel);
+  border: 1px solid var(--ga-border);
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 12px;
+}
+
 .ga-section {
   margin-top: 18px;
   padding: 20px;
@@ -195,4 +207,3 @@ legend {
     flex-direction: column;
   }
 }
-

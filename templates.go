@@ -43,6 +43,8 @@ type listPageData struct {
 	Filters   []filterView
 	Page      pageView
 	NewURL    string
+	Actions   []ActionMeta
+	ActionURL string
 	SortValue string
 }
 
