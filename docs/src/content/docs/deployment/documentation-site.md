@@ -54,7 +54,11 @@ The docs are configured for:
 https://newton-school.github.io/go-admin
 ```
 
-A GitHub Pages workflow can build and publish `docs/dist/`:
+The checked-in workflow at `.github/workflows/deploy-docs.yml` builds and publishes `docs/dist/` on every push to `master`. It can also be run manually from the Actions tab.
+
+GitHub Pages must use GitHub Actions as the Pages source in the repository settings.
+
+The workflow uses this deployment shape:
 
 ```yaml
 name: Deploy docs
@@ -62,6 +66,7 @@ name: Deploy docs
 on:
   push:
     branches: [master]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -76,32 +81,52 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v6
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
         with:
           node-version-file: docs/.nvmrc
           cache: npm
           cache-dependency-path: docs/package-lock.json
-      - run: npm ci
+
+      - name: Install dependencies
+        run: npm ci
         working-directory: docs
-      - run: npm run build
+
+      - name: Build docs
+        run: npm run build
         working-directory: docs
-      - uses: actions/upload-pages-artifact@v4
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
         with:
           path: docs/dist
 
   deploy:
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v5
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 ```
 
-If you host the site at a custom domain, update the `site` value in `docs/astro.config.mjs`.
+For the GitHub Pages project URL, `docs/astro.config.mjs` sets:
+
+```js
+site: 'https://newton-school.github.io',
+base: '/go-admin',
+```
+
+If you host the site at a custom domain, update `site` and remove or change `base` for that final URL.
 
 ## Static Hosts
 
@@ -114,4 +139,3 @@ For Netlify, Vercel, Cloudflare Pages, S3, or any static host:
 | Build command | `npm run build` |
 | Output directory | `docs/dist` or `dist` when the base directory is already `docs` |
 | Node version | From `docs/.nvmrc` |
-
