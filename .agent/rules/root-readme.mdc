@@ -1,0 +1,30 @@
+# Root README Rules
+
+The root `README.md` is only a lightweight entry point for the SDK. It must stay short, practical, and free of filler.
+
+## Allowed Content
+
+- Project name and one short description of what the SDK does.
+- Install command.
+- Go version requirement.
+- Minimal usage example showing site creation, one resource registration, and handler mounting.
+- One sentence that auth and permissions are owned by the host application.
+- Command to run the bundled example.
+- Links to the hosted documentation and documentation source.
+
+## Prohibited Content
+
+- Do not add long tutorials, API reference tables, route lists, architecture notes, field/widget catalogs, repository implementation details, deployment guides, roadmap text, or marketing copy.
+- Do not duplicate content that belongs in the Starlight docs site under `docs/`.
+- Do not add badges, banners, screenshots, changelogs, contribution guides, license sections, or unrelated project metadata unless explicitly requested.
+- Do not add speculative or aspirational feature descriptions.
+
+## Maintenance Rule
+
+- If the README starts needing more than basic install/use information, move that content into `docs/src/content/docs/` and link to it from the README.
+- Keep the README readable in one quick scan.
+
+description: Keep the root README minimal and focused on basic SDK access.
+globs: README.md
+alwaysApply: false
+---
