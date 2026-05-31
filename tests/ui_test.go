@@ -55,6 +55,28 @@ func TestAdminCSSAvoidsFancyLayoutStyling(t *testing.T) {
 	}
 }
 
+func TestDashboardActionColumnsUseConsistentWidths(t *testing.T) {
+	css, err := os.ReadFile("../internal/core/assets/static/admin.css")
+	if err != nil {
+		t.Fatalf("read css: %v", err)
+	}
+	body := string(css)
+	assertBodyContains(t, body,
+		".dashboard .module table th {\n  width: 100%;\n}",
+		".dashboard .module table td {\n  white-space: nowrap;\n}",
+	)
+}
+
+func TestDashboardChangeLinksDoNotDuplicateTheirLabel(t *testing.T) {
+	css, err := os.ReadFile("../internal/core/assets/static/admin.css")
+	if err != nil {
+		t.Fatalf("read css: %v", err)
+	}
+	if strings.Contains(string(css), ".changelink:before {\n  content: \"Change \";\n}") {
+		t.Fatalf("expected changelink css not to duplicate the visible Change label; css=%s", css)
+	}
+}
+
 func assertBodyNotContains(t *testing.T, body string, values ...string) {
 	t.Helper()
 	for _, value := range values {
